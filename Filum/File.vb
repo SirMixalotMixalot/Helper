@@ -4,10 +4,12 @@ Namespace Filum
     ''' 'A very lightweight wrapper around a file
     ''' </summary>
     Public Class File
+        Implements IDisposable
         Private ReadOnly m_FileName As String
         Private ReadOnly m_FullPath As String
         Private m_FileDescriptor As Integer
-        Private m_FilePos As Integer
+        Private disposed As Boolean = False
+
         ''' <summary>
         ''' The name of the file
         ''' </summary>
@@ -42,7 +44,7 @@ Namespace Filum
         ''' <param name="mode">The OpenMode the file should be in</param>
         ''' <param name="rootDir">root directory where file will be created</param>
         Public Sub New(filename As String, mode As OpenMode, rootDir As String)
-            m_FilePos = 1
+
             m_FullPath = IO.Path.Combine(rootDir, filename)
             If Not IO.Directory.Exists(rootDir) Then
                 IO.Directory.CreateDirectory(rootDir)
@@ -51,9 +53,18 @@ Namespace Filum
             m_FileName = filename
         End Sub
         Protected Overrides Sub Finalize()
-            If IO.File.Exists(m_FullPath) Then
+            Dispose(False)
+        End Sub
+        Protected Overridable Overloads Sub Dispose(_disposing As Boolean)
+            If Not disposed Then
                 Close()
             End If
+            disposed = True
+        End Sub
+
+        Public Overloads Sub Dispose() Implements IDisposable.Dispose
+            Dispose(True)
+            GC.SuppressFinalize(Me)
         End Sub
         ''' <summary>
         ''' Reads a line from the file and moves to the next line
